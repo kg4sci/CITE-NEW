@@ -13,21 +13,17 @@ class YourDataset:
         self.graph, self.category, self.num_classes, self.in_dim = self.load_data()
 
     def load_data(self):
-        # 加载节点信息
-        # 读取节点文件
-        paper_nodes = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/nodes/128/papertitle_embedding128.csv")  # paper_id, title, feature1, feature2, label
-        author_nodes = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/nodes/128/author_embedding128.csv")  # author_id, name, feature1, label
-        keywords_nodes = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/nodes/128/keywords_embedding128.csv")  # keywords_id, word
-        journal_nodes = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/nodes/128/journal_embedding128.csv")  # venue_id, name
-        paper_labels = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/nodes/128/id+label.csv")
+        paper_nodes = pd.read_csv("./hgn/dataset/data/papertitle_embedding128.csv")  # paper_id, title, feature1, feature2, label
+        author_nodes = pd.read_csv("./hgn/dataset/data/author_embedding128.csv")  # author_id, name, feature1, label
+        keywords_nodes = pd.read_csv("./hgn/dataset/data/keywords_embedding128.csv")  # keywords_id, word
+        journal_nodes = pd.read_csv("./hgn/dataset/data/journal_embedding128.csv")  # venue_id, name
+        paper_labels = pd.read_csv("./hgn/dataset/data/id+label.csv")
         
-        # 加载边信息
-        paper_author_edges = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/edges/author_paper_new.csv")  # paper_id, author_id
-        paper_journal_edges = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/edges/paper_journal.csv")  # paper_id, venue_id
-        paper_keywords_edges = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/edges/paper_keywords.csv")  # paper_id, keywords_id
-        paper_paper_edges = pd.read_csv("/root/autodl-tmp/dgl/1openHGNN-main/openhgnn/dataset/data/chemistry/edges/paper_paper.csv")  # paper_id, paper_id
+        paper_author_edges = pd.read_csv("./hgn/dataset/data/author_paper_new.csv")  # paper_id, author_id
+        paper_journal_edges = pd.read_csv("./hgn/dataset/data/paper_journal.csv")  # paper_id, venue_id
+        paper_keywords_edges = pd.read_csv("./hgn/dataset/data/paper_keywords.csv")  # paper_id, keywords_id
+        paper_paper_edges = pd.read_csv("./hgn/dataset/data/paper_paper.csv")  # paper_id, paper_id
         
-        # 创建异构图
         g = dgl.heterograph({
             ('paper', 'pa', 'author'): (paper_author_edges['paper_new_id'].values, paper_author_edges['author_new_id'].values),
             ('author', 'ap', 'paper'): (paper_author_edges['author_new_id'].values, paper_author_edges['paper_new_id'].values),
@@ -39,30 +35,20 @@ class YourDataset:
         })
         
 
-        # 设置节点特征
-        # 假设你需要选择前128个embedding特征
         author_columns = [f'name_embedding_{i}' for i in range(128)]
         paper_columns = [f'title_embedding_{i}' for i in range(128)]
         keywords_columns = [f'term_embedding_{i}' for i in range(128)]
         journal_columns = [f'journal_embedding_{i}' for i in range(128)]
 
-
         # paper_columns = [f'title_embedding_{i}' for i in range(128)]
 
-        # 使用iloc选择这些列
         g.nodes['author'].data['h'] = torch.tensor(author_nodes[author_columns].values, dtype=torch.float32)
         g.nodes['paper'].data['h'] = torch.tensor(paper_nodes[paper_columns].values, dtype=torch.float32)
         g.nodes['keywords'].data['h'] = torch.tensor(keywords_nodes[keywords_columns].values, dtype=torch.float32)
         g.nodes['journal'].data['h'] = torch.tensor(journal_nodes[journal_columns].values, dtype=torch.float32)
-        # 如果有多个节点类型，检查其他节点类型的特征
-
-        
-
-        # 准备标签
+                
         labels = th.LongTensor(paper_labels['label'].values)
 
-        
-        # 划分训练、验证和测试集
         num_nodes = g.number_of_nodes('paper') 
         train_idx, val_idx, test_idx = split_indices(num_nodes)
         train_mask = get_binary_mask(num_nodes, train_idx)
@@ -77,7 +63,6 @@ class YourDataset:
         return g, 'paper', 106, g.nodes['paper'].data['h'].shape[1]
     
 def split_indices(num_nodes, train_ratio=0.6, val_ratio=0.2, test_ratio=0.2):
-    # """随机划分训练集、验证集和测试集"""
         assert train_ratio + val_ratio + test_ratio == 1.0, "The sum of ratios must be 1"
 
         all_indices = np.random.permutation(num_nodes)

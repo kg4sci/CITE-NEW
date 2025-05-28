@@ -33,7 +33,7 @@ class Experiment(object):
     """
 
     default_conf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.ini')
-    specific_trainerflow = { #调用特定的训练逻辑，这个字典最终会结合 build_flow(self.config, trainerflow) 一起用，来决定我们应该调用哪种训练逻辑
+    specific_trainerflow = { 
         'HetGNN': 'hetgnntrainer',
         'HGNN_AC': 'node_classification_ac',
         'NSHE': 'nshetrainer',
@@ -95,7 +95,7 @@ class Experiment(object):
 
     }
     
-    immutable_params = ['model', 'dataset', 'task']#不可修改参数
+    immutable_params = ['model', 'dataset', 'task']
 
     def __init__(self, model, dataset, task,
                  gpu: int=-1,
@@ -103,19 +103,16 @@ class Experiment(object):
                  load_from_pretrained: bool = False,
                  hpo_search_space=None,
                  hpo_trials: int = 100,
-                 output_dir: str = "./openhgnn/output",
+                 output_dir: str = "./hgn/output",
                  conf_path: str = default_conf_path,
                  use_database:bool = False,
                  **kwargs):
-        #   此处给self.config加入  配置文件ini中的参数
         self.config = Config(file_path=conf_path, model=model, dataset=dataset, task=task, gpu=gpu)
 
-        #   以下给self.config  加入 来自命令行  的参数，确保参数是最新的
         self.config.model = model
         self.config.dataset = dataset
         self.config.task = task
 
-        # 命令行/脚本额外参数合并
         self.config.use_distributed = kwargs['use_distributed']
         kwargs.pop('use_distributed')
         if self.config.use_distributed:
@@ -132,24 +129,21 @@ class Experiment(object):
 #######  generate output dir输出目录
         HGNN_repository_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        #   openhgnn_dir incorporate output_dir and dataset_dir
-        #   openhgnn目录  和  本地HGNN仓库  属于同一个目录之下
-        self.openhgnn_dir = os.path.join(os.path.dirname(HGNN_repository_dir),'openhgnn')
-        os.makedirs( self.openhgnn_dir ,exist_ok= True)
+        #   hgn_dir incorporate output_dir and dataset_dir
+        self.hgn_dir = os.path.join(os.path.dirname(HGNN_repository_dir),'hgn')
+        os.makedirs( self.hgn_dir ,exist_ok= True)
         
-        #   openhgnn目录下的  output目录用来放程序输出日志，dataset目录用来存放数据集
-        os.makedirs( os.path.join(self.openhgnn_dir,'output'),exist_ok=True)
-        os.makedirs( os.path.join(self.openhgnn_dir,'dataset'),exist_ok=True)
+        os.makedirs( os.path.join(self.hgn_dir,'output'),exist_ok=True)
+        os.makedirs( os.path.join(self.hgn_dir,'dataset'),exist_ok=True)
 
-        self.config.openhgnn_dir = self.openhgnn_dir
+        self.config.hgn_dir = self.hgn_dir
 
-        self.config.output_dir = os.path.join(self.openhgnn_dir , 'output', self.config.model_name)
+        self.config.output_dir = os.path.join(self.hgn_dir , 'output', self.config.model_name)
         os.makedirs( self.config.output_dir ,exist_ok= True)
 #######
 
 
 #######  get GUI output widget
-        #   get方法，如果有output_widget关键字就返回对应值，如果没有就返回None
         self.config.output_widget= kwargs.get('output_widget', None)
 #######
 
@@ -167,7 +161,6 @@ class Experiment(object):
         for key, value in kwargs.items():
             assert key not in self.immutable_params
             self.config.__setattr__(key, value)
-    # 分布式训练
     def distributed_run(self, proc_id):
         num_gpus=len(self.config.gpu)
         torch.distributed.init_process_group(
@@ -213,13 +206,12 @@ class Experiment(object):
             if hasattr(self.config, 'line_profiler_func'):
                 prof.print_stats()
             return
-    # 普通训练
     def run(self):
         """ run the experiment """
 
         # 'line_profiler_func' is for internal use in profiling code execution time, here is an example to use it:
-        # from openhgnn import Experiment
-        # from openhgnn.trainerflow import NodeClassification
+        # from hgn import Experiment
+        # from hgn.trainerflow import NodeClassification
         # Experiment(model='RGCN', dataset='acm4GTN', task='node_classification', gpu=-1, max_epoch=1, line_profiler_func=[NodeClassification.train, ]).run()
         
 
@@ -236,21 +228,18 @@ class Experiment(object):
                 prof = prof(func)
             prof.enable_by_count()
 
-        ## 之后代码中的  args.logger
         self.config.logger = Logger(self.config)
 
         set_random_seed(self.config.seed)
         trainerflow = self.specific_trainerflow.get(self.config.model, self.config.task)
         if type(trainerflow) is not str:
-            trainerflow = trainerflow.get(self.config.task)#如果没在特殊的训练逻辑中，就调用task名称的trainer
+            trainerflow = trainerflow.get(self.config.task)
         if self.config.hpo_search_space is not None:
             # hyper-parameter search
             hpo_experiment(self.config, trainerflow)
         else:
-            #   此时self.config 中包括了 ：ini配置文件的参数，命令行参数，logger（用于输出日志信息），openhgnn_dir（存输出和数据集的目录）,output_widget（用于在GUI输出的窗口）
-            flow = build_flow(self.config, trainerflow)#返回的flow是一个特殊的实例
-            # build_flow 会根据配置创建相应的训练流程对象。这个对象会接收配置中的 dataset 信息，并将数据集传递到模型训练过程中
-            result = flow.train()#实际执行的地方，数据集在这里传递给模型
+            flow = build_flow(self.config, trainerflow)
+            result = flow.train()
             if hasattr(self.config, 'line_profiler_func'):
                 prof.print_stats()
             return result

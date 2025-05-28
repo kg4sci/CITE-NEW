@@ -57,29 +57,13 @@ if dataset == 'arxiv':
 'cs.SE (Software Engineering)',
 'cs.SI (Social and Information Networks)',
 'cs.SY (Systems and Control)']
-if dataset == 'citeseer':
-    classes = [
-    'Agents', 'ML (Machine Learning)', 'IR (Information Retrieval)', 'DB (Databases)', 'HCI (Human-Computer Interaction)', 'AI (Artificial Intelligence)'
-    ]
 if dataset == 'cora':
     classes =['Rule_Learning', 'Neural_Networks', 'Case_Based', 'Genetic_Algorithms', 'Theory', 'Reinforcement_Learning', 'Probabilistic_Methods']
 if dataset == 'pubmed':
     classes =[
        'Experimentally induced diabetes', 'Type 1 diabetes', 'Type 2 diabetes' 
     ]
-if dataset == 'reddit':
-    classes =[
-       'Normal Users', 'Popular Users'
-    ]
-if dataset == 'instagram':
-    classes =[
-       'Normal Users', 'Commercial Users'
-    ]
-if dataset == 'wikics':
-    classes =[
-       'Computational Linguistics', 'Databases', 'Operating Systems', 'Computer Architecture', 'Computer Security', 'Internet Protocols', 'Computer File Systems', 'Distributed Computing Architecture', 'Web Technology', 'Programming Language Topics'
-    ]
-if dataset == 'chemistry'or'chemistry_author_no' or 'chemistry_abstract_no' or 'chemistry_journal_no' or 'chemistry_keywords_no' or 'chemistry_fullhomo':
+if dataset == 'chemistry':
     classes = [
         'ENGINEERING', 'MATERIALSSCIENCE', 'PHYSICS', 'CHEMISTRY', 'COMPUTERSCIENCE', 'MEDICINE', 'AGRICULTURE', 'MATHEMATICS', 'PUBLIC', 'GEOSCIENCES', 
         'EDUCATION', 'DENTISTRY', 'RADIOLOGY', 'HUMANITIES', 'ELECTROCHEMISTRY', 'NANOSCIENCE&NANOTECHNOLOGY', 'ENVIRONMENTALSCIENCES', 'ENERGY&FUELS', 
@@ -103,10 +87,8 @@ for cls in classes:
     if '(' in cls and ')' in cls:
         main_part, bracket_part = cls.split(' (')
         bracket_part = bracket_part.rstrip(')')
-        # 匹配六种可能的情况，包括连字符和原始空格
         escaped_cls = f"(?:{re.escape(main_part)} \\({re.escape(bracket_part)}\\)|{re.escape(bracket_part)} \\({re.escape(main_part)}\\)|{re.escape(main_part)}|{re.escape(bracket_part)}|{re.escape(main_part.replace(' ', '-'))}|{re.escape(main_part)})"
     else:
-        # 包括连字符和原始空格的情况
         escaped_cls = f"(?:{re.escape(cls)}|{re.escape(cls.replace(' ', '-'))})"
     escaped_classes.append(escaped_cls)
 
@@ -122,12 +104,11 @@ for i, cls in enumerate(classes):
         class_map[f"{bracket_part} ({main_part})".lower()] = i
         class_map[main_part.lower()] = i
         class_map[bracket_part.lower()] = i
-        class_map[main_part.replace(' ', '-').lower()] = i  # 添加连字符版本
+        class_map[main_part.replace(' ', '-').lower()] = i  
     else:
         class_map[cls.lower()] = i
-        class_map[cls.replace(' ', '-').lower()] = i  # 添加连字符版本
+        class_map[cls.replace(' ', '-').lower()] = i  
 for p in tqdm(text):
-    # 从 "Answer" 到 "Answer" 后的第一个句号之间的部分
     answer_section = re.search(r'\n\nAnswer(.*?)\n\nExplanation', p, re.DOTALL) or re.search(r'Answer(.*?\.)', p, re.DOTALL) or re.search(r'\n \n Answer(.*?)\n\nExplanation', p, re.DOTALL) or re.search(r'Answer(.*?)\n\nExplanation', p, re.DOTALL)
     if answer_section:
         tp = answer_section.group(1)
@@ -136,7 +117,6 @@ for p in tqdm(text):
     matches = re.findall(classes_regex, tp.strip(), re.IGNORECASE)
     mapped = [class_map[m.lower()] for m in matches if m.lower() in class_map]
     if len(mapped) == 0:
-    # 从 "Answer" 到 "Answer" 后的第二个句号之间的部分
         answer_section = re.search(r'Answer(.*?\.\s*.*?\.)', p, re.DOTALL)
         if answer_section:
             p = answer_section.group(1)

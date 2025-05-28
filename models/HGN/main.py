@@ -5,15 +5,10 @@
 import argparse
 import os
 
-# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-# 设置环境变量，避免内存碎片化
-# os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
-
-# 你的代码逻辑...
 
 
 
-from openhgnn.experiment import Experiment
+from hgn.experiment import Experiment
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', '-m', default='GTN', type=str, help='name of models')
@@ -35,9 +30,4 @@ if __name__ == '__main__':
                             mini_batch_flag=args.mini_batch_flag, use_distributed = args.use_distributed,
                             graphbolt = args.graphbolt)
     print(experiment)
-    print("*****************+++++++++++++")
-
-    # total_params = sum(p.numel() for p in experiment.model.parameters())
-    # print(f"Total number of parameters*************: {total_params}")
-
     experiment.run()

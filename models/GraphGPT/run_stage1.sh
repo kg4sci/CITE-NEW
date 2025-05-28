@@ -1,10 +1,10 @@
 export PYTHONPATH=$(pwd)/graphgpt:$PYTHONPATH
 export CUDA_VISIBLE_DEVICES=2
-model_path=./vicuna-7b-v1.5-16k # Vicuna 模型路径
-instruct_ds=./data/stage_1/my/merged_output_nogpt.json # 数据集路径
-graph_data_path=./graph_data/my_graph_data_new.pt # 图数据路径
-pretra_gnn=clip_gt_arxiv   # 预训练图编码器路径 
-output_model=./checkpoints0501/stage_1             # 输出模型的路径
+model_path=./vicuna-7b-v1.5-16k # Vicuna 
+instruct_ds=./data/stage_1/my/merged_output_nogpt.json # dataset
+graph_data_path=./graph_data/my_graph_data_new.pt # graphdata
+pretra_gnn=clip_gt_arxiv   # graphencoder
+output_model=./checkpoints/stage_1   # output path
 
 
 wandb offline

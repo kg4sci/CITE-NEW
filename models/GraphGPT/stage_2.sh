@@ -3,12 +3,12 @@ export CUDA_VISIBLE_DEVICES=2
 
 # to fill in the following path to run the second stage of our GraphGPT!
 #如果报错就先执行sed -i 's/\r//' stage_2.sh
-model_path=./vicuna-7b-v1.5-16k # Vicuna 模型路径
-instruct_ds=./data/stage_2/output_hop2_to_hop4_nogpt_71506.json # 数据集路径
-graph_data_path=./graph_data/my_graph_data_new.pt # 图数据路径
-pretra_gnn=clip_gt_arxiv   # 预训练图编码器路径 
-tuned_proj=./checkpoints0501/stage_1_projector/stage_1_projector.bin
-output_model=./checkpoints0501/stage_2
+model_path=./vicuna-7b-v1.5-16k # Vicuna 
+instruct_ds=./data/stage_2/output_hop2_to_hop4_nogpt_71506.json # dataset
+graph_data_path=./graph_data/my_graph_data_new.pt # graph data
+pretra_gnn=clip_gt_arxiv   # graph encoder 
+tuned_proj=./checkpoints/stage_1_projector/stage_1_projector.bin
+output_model=./checkpoints/stage_2
 
 wandb offline
 python3 graphgpt/train/train_mem.py \

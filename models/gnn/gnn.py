@@ -14,7 +14,7 @@ from sklearn.metrics import f1_score
 from model import GCN, SAGE, GAT
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataname', type=str, default='citeseer')
+parser.add_argument('--dataname', type=str, default='chemistry')
 parser.add_argument('--model', type=str, default='GCN')
 parser.add_argument('--num_layers', type=int, default='3')
 parser.add_argument('--dropout', type=float, default='0.5')
@@ -47,8 +47,8 @@ path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', 'Planetoid')
 # dataset = Planetoid(path, args.dataset, transform=T.NormalizeFeatures())
 dataname = args.dataname
 data = torch.load(f'../../datasets/{dataname}.pt').to(device)
-if args.st:
-    data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
+# if args.st:
+    # data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
 data.edge_index = to_undirected(data.edge_index)
 
 # if len(data.train_mask)==10:
@@ -56,32 +56,25 @@ data.edge_index = to_undirected(data.edge_index)
 #     data.val_mask = data.val_mask[0]
 #     data.test_mask = data.test_mask[0]
 
-# 随机种子，保证每次划分相同
 torch.manual_seed(42)
 
-# 加载数据
 data = torch.load(f'../../datasets/{dataname}.pt').to(device)
 if args.st:
     data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
 data.edge_index = to_undirected(data.edge_index)
 
-# 获取所有节点的数量
 num_nodes = data.x.shape[0]
 
-# 生成一个随机排列的节点索引
 random_idx = torch.randperm(num_nodes)
 
-# 计算每个部分的大小
 train_size = int(0.6 * num_nodes)
 val_size = int(0.2 * num_nodes)
 test_size = num_nodes - train_size - val_size  # 剩下的就是测试集大小
 
-# 划分数据集
 train_idx = random_idx[:train_size]
 val_idx = random_idx[train_size:train_size + val_size]
 test_idx = random_idx[train_size + val_size:]
 
-# 创建mask并分配到train_mask, val_mask, test_mask
 data.train_mask = torch.zeros(num_nodes, dtype=torch.bool)
 data.val_mask = torch.zeros(num_nodes, dtype=torch.bool)
 data.test_mask = torch.zeros(num_nodes, dtype=torch.bool)
@@ -157,7 +150,6 @@ def test():
     for mask in [data.train_mask, data.val_mask, data.test_mask]:
         acc = int((pred[mask] == data.y[mask]).sum()) / int(mask.sum())
         accs.append(acc)
-        # 计算 F1 Macro
     for mask in [data.train_mask, data.val_mask, data.test_mask]:
         f1 = f1_score(data.y[mask].cpu().numpy(), pred[mask].cpu().numpy(), average='macro')
         macro_f1.append(f1)
