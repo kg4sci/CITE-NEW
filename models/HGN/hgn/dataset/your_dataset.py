@@ -13,16 +13,16 @@ class YourDataset:
         self.graph, self.category, self.num_classes, self.in_dim = self.load_data()
 
     def load_data(self):
-        paper_nodes = pd.read_csv("./hgn/dataset/data/papertitle_embedding128.csv")  # paper_id, title, feature1, feature2, label
-        author_nodes = pd.read_csv("./hgn/dataset/data/author_embedding128.csv")  # author_id, name, feature1, label
-        keywords_nodes = pd.read_csv("./hgn/dataset/data/keywords_embedding128.csv")  # keywords_id, word
-        journal_nodes = pd.read_csv("./hgn/dataset/data/journal_embedding128.csv")  # venue_id, name
-        paper_labels = pd.read_csv("./hgn/dataset/data/id+label.csv")
+        paper_nodes = pd.read_csv("../datasets/csv/node/papertitle_embedding128.csv")  # paper_id, title, feature1, feature2, label
+        author_nodes = pd.read_csv("../datasets/csv/node/author_embedding128.csv")  # author_id, name, feature1, label
+        keywords_nodes = pd.read_csv("../datasets/csv/node/keywords_embedding128.csv")  # keywords_id, word
+        journal_nodes = pd.read_csv("../datasets/csv/node/journal_embedding128.csv")  # venue_id, name
+        paper_labels = pd.read_csv("../datasets/csv/node/id+label.csv")
         
-        paper_author_edges = pd.read_csv("./hgn/dataset/data/author_paper_new.csv")  # paper_id, author_id
-        paper_journal_edges = pd.read_csv("./hgn/dataset/data/paper_journal.csv")  # paper_id, venue_id
-        paper_keywords_edges = pd.read_csv("./hgn/dataset/data/paper_keywords.csv")  # paper_id, keywords_id
-        paper_paper_edges = pd.read_csv("./hgn/dataset/data/paper_paper.csv")  # paper_id, paper_id
+        paper_author_edges = pd.read_csv("../datasets/csv/edge/author_paper_new.csv")  # paper_id, author_id
+        paper_journal_edges = pd.read_csv("../datasets/csv/edge/paper_journal.csv")  # paper_id, venue_id
+        paper_keywords_edges = pd.read_csv("../datasets/csv/edge/paper_keywords.csv")  # paper_id, keywords_id
+        paper_paper_edges = pd.read_csv("../datasets/csv/edge/paper_paper.csv")  # paper_id, paper_id
         
         g = dgl.heterograph({
             ('paper', 'pa', 'author'): (paper_author_edges['paper_new_id'].values, paper_author_edges['author_new_id'].values),

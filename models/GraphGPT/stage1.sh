@@ -2,7 +2,7 @@ export PYTHONPATH=$(pwd)/graphgpt:$PYTHONPATH
 export CUDA_VISIBLE_DEVICES=2
 model_path=./vicuna-7b-v1.5-16k # Vicuna 
 instruct_ds=./data/stage_1/stage1.json # dataset
-graph_data_path=./graph_data/my_graph_data_new.pt # graphdata
+graph_data_path=../datasets/pt/my_graph_data_new.pt # graphdata
 pretra_gnn=clip_gt_arxiv   # graphencoder
 output_model=./checkpoints/stage_1   # output path
 

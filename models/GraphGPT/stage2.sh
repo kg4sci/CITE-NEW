@@ -3,7 +3,7 @@ export CUDA_VISIBLE_DEVICES=2
 
 model_path=./vicuna-7b-v1.5-16k # Vicuna 
 instruct_ds=./data/stage_2/stage2.json # dataset
-graph_data_path=./graph_data/my_graph_data_new.pt # graph data
+graph_data_path=graph_data_path=../datasets/pt/my_graph_data_new.pt # graph data
 pretra_gnn=clip_gt_arxiv   # graph encoder 
 tuned_proj=./checkpoints/stage_1_projector/stage_1_projector.bin
 output_model=./checkpoints/stage_2

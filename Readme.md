@@ -3,7 +3,8 @@
 ## 0. Python environment requirements
 
 - Python  >= 3.6
-- PyTorch >= 2.3.0
+- PyTorch >= 2.1.0
+- CUDA >= 11.8
 
 ## 1.Download CITE
 
@@ -17,16 +18,26 @@
 
 ### Homogeneous Graph models
 
+#### Requirements
+
 ```
 cd models/gnn/
-conda create --name gnn python==3.8
+conda create --name gnn python==3.10
 conda activate gnn
 pip install -r requirements.txt
+
+```
+
+#### How to run
+
+```
 chomd +x run.sh
 ./run.sh
 ```
 
 ### Heterogeneous Graph models
+
+#### Requirements
 
 ```
 cd models/HGN/
@@ -37,26 +48,31 @@ pip install dgl -f https://data.dgl.ai/wheels/repo.html
 pip install openhgnn
 ```
 
-**how to run**
+#### How to run
 
-python main.py -m **model name** -t node_classification -d my_custom_node_classification -g 0 --use_best_config
+```
+python main.py -m model name -t node_classification -d my_custom_node_classification -g 0 --use_best_config
+```
+
 model names:
 RGCN SimpleHGN HGT NARS CompGCN HPN
 
 ### LLM
 
+#### Requirements
+
 ```
 cd models/TAPE+LLaMA
-conda creative --name LLM python==3.8
+conda creative --name LLM python==3.10
 conda activate LLM
 pip install -r requirements.txt
 ```
 
-**run**
+#### Run
 
 python chat.py
 
-**eval**
+#### Evaluation
 
 python llama_preds.py
 
@@ -64,46 +80,57 @@ python llama_preds.py
 
 #### TAPE
 
+##### Requirements
+
 ```
 cd models/TAPE+LLaMA
-conda create --name TAPE python==3.8
+conda create --name TAPE python==3.10
 conda activate TAPE
 pip install -r requirements.txt
 ```
 
+##### How to run
+
+```
+chomd +x run.sh
+./run.sh
+```
+
 #### GraphGPT
+
+##### Requirements
 
 ```
 cd models/GraphGPT
-conda create --name GraphGPT python==3.8
+conda create --name GraphGPT python==3.10
 conda activate GraphGPT
 pip install -r requirements.txt
 ```
 
-Run
+##### How to run
 
-**Stage-1**
+###### Stage-1
 
 ```
 chmod +x stage1.sh
 ./stage1.sh
 ```
 
-**Extract**
+###### Extract
 
 ```
 chmod +x extract.sh
 ./extract.sh
 ```
 
-**Stage-2**
+###### Stage-2
 
 ```
 xchmod +x stage2.sh
 ./stage2.sh
 ```
 
-**Eval**
+###### **Eval**
 
 ```
 chmod +x eval.sh

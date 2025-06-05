@@ -46,7 +46,7 @@ init_wandb(
 path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', 'Planetoid')
 # dataset = Planetoid(path, args.dataset, transform=T.NormalizeFeatures())
 dataname = args.dataname
-data = torch.load(f'../../datasets/{dataname}.pt').to(device)
+data = torch.load(f'../datasets/pt/{dataname}.pt').to(device)
 # if args.st:
     # data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
 data.edge_index = to_undirected(data.edge_index)

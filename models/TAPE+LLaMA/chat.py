@@ -9,17 +9,16 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4"
 
 
-# 数据加载
-dataname = 'chemistry' #<class 'dict'>
-# dataname = 'arxiv' #<class 'torch_geometric.data.data.Data'>
-data = torch.load(f"../../../datasets/{dataname}.pt")
+dataname = 'chemistry' 
+# dataname = 'arxiv' 
+data = torch.load(f"../../datasets/pt/{dataname}.pt")
 print(type(data)) 
 raw_texts = data.raw_texts
 # Modify the index_list to start from the specified start_index
 index_list = list(range(start_index, len(raw_texts)))
 # index_list = list(range(len(raw_texts)))
 
-# 选择 prompt
+#  prompt
 if dataname == 'cora':
     prompt = "\n Question: Which of the following sub-categories of AI does this paper belong to: Case Based, Genetic Algorithms, Neural Networks, Probabilistic Methods, Reinforcement Learning, Rule Learning, Theory? If multiple options apply, provide a comma-separated list ordered from most to least related, then for each choice you gave, explain how it is present in the text.\n\nAnswer: "
 elif dataname == 'pubmed':
