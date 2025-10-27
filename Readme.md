@@ -10,7 +10,7 @@
 
 | Dataset version | Description                                                  |
 | --------------- | ------------------------------------------------------------ |
-| csv             | csv files include node and edge informations, including raw-texts and 128-dimention embedding<br />Download [paper](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_embedding.csv), [author](https://huggingface.co/datasets/kg4sci/CITE/blob/main/author_embedding128.csv), [journal](https://huggingface.co/datasets/kg4sci/CITE/blob/main/journal_embedding128.csv), [keywords](https://huggingface.co/datasets/kg4sci/CITE/blob/main/keywords_embedding128.csv), [label](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_label.csv) and move them to `datasets/csv/node`<br /> Download [paper-paper](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_paper.csv), [paper-author](https://huggingface.co/datasets/kg4sci/CITE/blob/main/author_paper.csv), [paper-journal](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_journal.csv), [paper-keywords](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_keywords.csv) and move them to `datasets/csv/edge` |
+| csv             | csv files include node and edge informations, including raw-texts and 128-dimention embedding<br />Download [paper](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_embedding.csv), [author](https://huggingface.co/datasets/kg4sci/CITE/blob/main/author_embedding128.csv), [journal](https://huggingface.co/datasets/kg4sci/CITE/blob/main/journal_embedding128.csv), [keywords](https://huggingface.co/datasets/kg4sci/CITE/blob/main/keywords_embedding128.csv), [label](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_label.csv) and move them to `datasets/csv/node`<br />Download [paper-paper](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_paper.csv), [paper-author](https://huggingface.co/datasets/kg4sci/CITE/blob/main/author_paper.csv), [paper-journal](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_journal.csv), [paper-keywords](https://huggingface.co/datasets/kg4sci/CITE/blob/main/paper_keywords.csv) and move them to `datasets/csv/edge` |
 | pt              | [chemistry.pt](https://huggingface.co/datasets/kg4sci/CITE/blob/main/chemistry.pt) and [my_graph_data.pt](https://huggingface.co/datasets/kg4sci/CITE/blob/main/my_graph_data.pt) provides all information of  node and edges.<br /> Download the datasets and move them to `datasets/pt/` |
 | json            | json file include manufactured for GraphGPT, which includs two training stages and one eval stage.<br />Download [stage1](https://huggingface.co/datasets/kg4sci/CITE/blob/main/stage1.json), [stage2](https://huggingface.co/datasets/kg4sci/CITE/blob/main/stage2.json) and [eval](https://huggingface.co/datasets/kg4sci/CITE/blob/main/eval_std.json) and move them to `dataset/json/` |
 
@@ -25,7 +25,6 @@ cd models/gnn/
 conda create --name gnn python==3.10
 conda activate gnn
 pip install -r requirements.txt
-
 ```
 
 #### How to run

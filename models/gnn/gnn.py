@@ -14,7 +14,7 @@ from sklearn.metrics import f1_score
 from model import GCN, SAGE, GAT
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataname', type=str, default='chemistry')
+parser.add_argument('--dataname', type=str, default='citeseer')
 parser.add_argument('--model', type=str, default='GCN')
 parser.add_argument('--num_layers', type=int, default='3')
 parser.add_argument('--dropout', type=float, default='0.5')
@@ -44,44 +44,47 @@ init_wandb(
 )
 
 path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'data', 'Planetoid')
-# dataset = Planetoid(path, args.dataset, transform=T.NormalizeFeatures())
 dataname = args.dataname
-data = torch.load(f'../datasets/pt/{dataname}.pt').to(device)
-# if args.st:
-    # data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
+data = torch.load(f'../../datasets/{dataname}.pt').to(device)
+if args.st:
+    data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
 data.edge_index = to_undirected(data.edge_index)
 
-# if len(data.train_mask)==10:
-#     data.train_mask = data.train_mask[0]
-#     data.val_mask = data.val_mask[0]
-#     data.test_mask = data.test_mask[0]
 
 torch.manual_seed(42)
+
 
 data = torch.load(f'../../datasets/{dataname}.pt').to(device)
 if args.st:
     data.x = torch.load(f'st_embeddings/{dataname}_st.pt').to(device)
 data.edge_index = to_undirected(data.edge_index)
 
+
 num_nodes = data.x.shape[0]
 
-random_idx = torch.randperm(num_nodes)
+if data.y.numel() < num_nodes:
+    y_full = torch.full((num_nodes,), -1, dtype=torch.long)
+    y_full[:data.y.numel()] = data.y
+    data.y = y_full.to(device)
+else:
+    data.y = data.y.to(device)
 
-train_size = int(0.6 * num_nodes)
-val_size = int(0.2 * num_nodes)
-test_size = num_nodes - train_size - val_size  # 剩下的就是测试集大小
+labeled_mask = data.y != -1                       
+labeled_idx = torch.nonzero(labeled_mask, as_tuple=False).view(-1)
 
-train_idx = random_idx[:train_size]
-val_idx = random_idx[train_size:train_size + val_size]
-test_idx = random_idx[train_size + val_size:]
+perm = labeled_idx[torch.randperm(labeled_idx.numel(), device=labeled_idx.device)]
+n_tr = int(0.6 * perm.numel())
+n_va = int(0.2 * perm.numel())
+tr_idx = perm[:n_tr]
+va_idx = perm[n_tr:n_tr + n_va]
+te_idx = perm[n_tr + n_va:]
 
-data.train_mask = torch.zeros(num_nodes, dtype=torch.bool)
-data.val_mask = torch.zeros(num_nodes, dtype=torch.bool)
-data.test_mask = torch.zeros(num_nodes, dtype=torch.bool)
-
-data.train_mask[train_idx] = True
-data.val_mask[val_idx] = True
-data.test_mask[test_idx] = True
+data.train_mask = torch.zeros(num_nodes, dtype=torch.bool, device=device)
+data.val_mask   = torch.zeros(num_nodes, dtype=torch.bool, device=device)
+data.test_mask  = torch.zeros(num_nodes, dtype=torch.bool, device=device)
+data.train_mask[tr_idx] = True
+data.val_mask[va_idx]   = True
+data.test_mask[te_idx]  = True
 
 if args.use_gdc:
     transform = T.GDC(
@@ -95,7 +98,7 @@ if args.use_gdc:
     data = transform(data)
 
 
-
+num_classes = int(data.y[data.y != -1].max().item()) + 1
 
 
 if args.model == 'GCN':
@@ -115,24 +118,20 @@ elif args.model == 'SAGE':
     dropout=args.dropout
     ).to(device)
 elif args.model == 'GAT':
-    model = SAGE(
+    model = GAT(
     in_channels=data.x.shape[1],
     hidden_channels=args.hidden_channels,
     out_channels=len(data.label_name),
     num_layers=args.num_layers,
     dropout=args.dropout
     ).to(device)
-# optimizer = torch.optim.Adam([
-#     dict(params=model.conv1.parameters(), weight_decay=5e-4),
-#     dict(params=model.conv2.parameters(), weight_decay=0)
-# ], lr=args.lr)  # Only perform weight-decay on first convolution.
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
 def train():
     model.train()
     optimizer.zero_grad()
-    out = model(data.x, data.edge_index, data.edge_attr)
+    out = model(data.x, data.edge_index) 
     loss = F.cross_entropy(out[data.train_mask], data.y[data.train_mask])
     loss.backward()
     optimizer.step()
@@ -142,19 +141,17 @@ def train():
 @torch.no_grad()
 def test():
     model.eval()
-    pred = model(data.x, data.edge_index, data.edge_attr).argmax(dim=-1)
+    pred = model(data.x, data.edge_index).argmax(dim=-1)  
 
-    accs = []
-    macro_f1 = []
-    micro_f1 = []
+    accs, macro_f1, micro_f1 = [], [], []
     for mask in [data.train_mask, data.val_mask, data.test_mask]:
-        acc = int((pred[mask] == data.y[mask]).sum()) / int(mask.sum())
+        acc = (pred[mask] == data.y[mask]).float().mean().item()
         accs.append(acc)
-    for mask in [data.train_mask, data.val_mask, data.test_mask]:
-        f1 = f1_score(data.y[mask].cpu().numpy(), pred[mask].cpu().numpy(), average='macro')
-        macro_f1.append(f1)
-        f1 = f1_score(data.y[mask].cpu().numpy(), pred[mask].cpu().numpy(), average='micro')
-        micro_f1.append(f1)
+
+        y_true = data.y[mask].detach().cpu().numpy()
+        y_pred = pred[mask].detach().cpu().numpy()
+        macro_f1.append(f1_score(y_true, y_pred, average='macro'))
+        micro_f1.append(f1_score(y_true, y_pred, average='micro'))
     return accs, macro_f1, micro_f1
 
 
