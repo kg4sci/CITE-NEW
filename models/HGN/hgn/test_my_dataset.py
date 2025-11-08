@@ -3,13 +3,11 @@ from dataset import build_dataset
 import logging
 
 def test_my_dataset():
-    # 构建你的数据集
     logger = logging.getLogger("my_logger")
     logger.setLevel(logging.INFO)
     # self.logger = args.logger
     dataset = build_dataset('my_custom_node_classification', task='node_classification',logger=logger)
 
-    # 打印图的基本信息
     print("Graph:", dataset.g)
     print("目标节点类型:", dataset.category)
     print("类别数量:", dataset.num_classes)
