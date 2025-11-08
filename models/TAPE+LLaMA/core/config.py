@@ -91,7 +91,7 @@ def set_cfg(cfg):
     # Add handling for missing 1-shot, 3-shot, and 5-shot values
     # ------------------------------------------------------------------------ #
     cfg.dataset_params = CN()
-    cfg.dataset_params.shot_1 = None  # 可以用默认值填充
+    cfg.dataset_params.shot_1 = None  
     cfg.dataset_params.shot_3 = None
     cfg.dataset_params.shot_5 = None
 

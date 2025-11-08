@@ -24,33 +24,28 @@ def run(cfg):
         ensembler = EnsembleTrainer(cfg)
         acc = ensembler.train()
 
-        # 保存到结果列表中
         results.append(acc)
 
-        # 打印并保存评估结果
         print(f"[{cfg.dataset}] Finished Training with Seed {cfg.seed}")
         for feature_type, acc_results in acc.items():
             print(f"Feature type: {feature_type}")
-            print(f"Acc results keys: {acc_results.keys()}")  # 打印字段名，确保包含所有指标
+            print(f"Acc results keys: {acc_results.keys()}")  
             for key, value in acc_results.items():
                 print(f"{key}: {value}")
 
-        # 定义 CSV 文件的字段名，确保包含所有评估指标字段
         fieldnames = [
             'dataset', 'num_layers', 'hidden_dim', 'dropout', 'test_acc',
             'test_macrof1', 'test_microf1', 'test_weightedf1', 'test_macrof1', 
             'val_acc', 'val_f1', 'val_microf1', 'val_weightedf1', 'val_macrof1'
         ]
 
-        # 将结果保存在 CSV 文件中
         with open(f'{cfg.dataset}_results.csv', 'a', newline='') as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             
-            # 如果是首次写入文件，写入字段名
-            if file.tell() == 0:  # 文件为空，写入表头
+            if file.tell() == 0:  
                 writer.writeheader()
 
-            # 将评估结果写入 CSV 文件
+            
             for feature_type, acc_results in acc.items():
                 row = {
                     'dataset': cfg.dataset,
@@ -72,7 +67,7 @@ def run(cfg):
 
     end = time.time()
 
-    # 打印总的运行时间
+    
     print(f"Running time: {round((end-start)/len(seeds), 2)}s")
 
 

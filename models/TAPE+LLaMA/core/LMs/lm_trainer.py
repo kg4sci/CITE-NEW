@@ -54,7 +54,7 @@ class LMTrainer():
         self.output_dir = f'output/{self.dataset_name}{self.use_gpt_str}/{self.model_name}-seed{self.seed}'
         self.ckpt_dir = f'prt_lm/{self.dataset_name}{self.use_gpt_str}/{self.model_name}-seed{self.seed}'
 
-        # Preprocess data数据加载和预处理
+       
         data, num_classes, text = load_data(
             dataset=self.dataset_name, use_text=True, use_gpt=cfg.lm.train.use_gpt, seed=self.seed)
         self.data = data
@@ -65,10 +65,10 @@ class LMTrainer():
         #     self.data.train_mask = self.data.train_mask[0]
         #     self.data.val_mask = self.data.val_mask[0]
         #     self.data.test_mask = self.data.test_mask[0]
-        # 加载分词器，对文本数据标记化，处理的是摘要数据
+        
         # tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         # tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/multi-qa-distilbert-cos-v1")************更改
-        # 将文本转换为bert可以理解的序列
+        
         tokenizer = AutoTokenizer.from_pretrained("/mnt/data/zch/glbench/models/enhancer/TAPE/multi-qa-distilbert-cos-v1")
         # tokenizer = AutoTokenizer.from_pretrained("/mnt/data/zch/projects/models/enhancer/TAPE/multi-qa-distilbert-cos-v1", local_files_only=True)
 
@@ -76,10 +76,8 @@ class LMTrainer():
         if type(text)!=list:
             text = text.tolist()
         X = tokenizer(text, padding=True, truncation=True, max_length=512)
-        # Dataset 类将文本数据和标签封装为一个数据集对象
         dataset = Dataset(X, data.y.tolist())
         self.inf_dataset = dataset
-        # 对训练数据的划分
         self.train_dataset = torch.utils.data.Subset(
             dataset, self.data.train_mask.nonzero().squeeze().tolist())
         self.val_dataset = torch.utils.data.Subset(
@@ -88,14 +86,13 @@ class LMTrainer():
             dataset, self.data.test_mask.nonzero().squeeze().tolist())
 
         # Define pretrained tokenizer and model
-        # 模型初始化，预训练bert模型
         # bert_model = AutoModel.from_pretrained(self.model_name)
         # bert_model = AutoModel.from_pretrained("sentence-transformers/multi-qa-distilbert-cos-v1")************更改
         bert_model = AutoModel.from_pretrained("/mnt/data/zch/glbench/models/enhancer/TAPE/multi-qa-distilbert-cos-v1")
-        # 自定义分类器，封装了bert_model,用于将bert的输出映射到分类标签空间
+        
         self.model = BertClassifier(bert_model,
                                     n_labels=self.n_labels,
-                                    feat_shrink=self.feat_shrink)# 是否降维
+                                    feat_shrink=self.feat_shrink)
 
         # prev_ckpt = f'prt_lm/{self.dataset_name}/{self.model_name}.ckpt'
         # if self.use_gpt_str and os.path.exists(prev_ckpt):
@@ -138,7 +135,6 @@ class LMTrainer():
             fp16=True,
             dataloader_drop_last=False,
         )
-        #训练过程
         self.trainer = Trainer(
             model=self.model,
             args=args,
@@ -153,7 +149,6 @@ class LMTrainer():
         torch.save(self.model.state_dict(), init_path(f"{self.ckpt_dir}.ckpt"))
         print(f'LM saved to {self.ckpt_dir}.ckpt')
 
-    #评估和保存
     @time_logger
     @torch.no_grad()
     def eval_and_save(self):
@@ -199,12 +194,10 @@ class LMTrainer():
         def eval(x):
             return evaluator(np.argmax(pred[x], -1), self.data.y[x])
 
-        # 计算训练集、验证集和测试集的准确率
         train_acc = eval(self.data.train_mask)
         val_acc = eval(self.data.val_mask)
         test_acc = eval(self.data.test_mask)
 
-        # 计算宏观 F1 和微观 F1
         train_macro_f1 = f1_score(self.data.y[self.data.train_mask], np.argmax(pred[self.data.train_mask], -1), average='macro')
         val_macro_f1 = f1_score(self.data.y[self.data.val_mask], np.argmax(pred[self.data.val_mask], -1), average='macro')
         test_macro_f1 = f1_score(self.data.y[self.data.test_mask], np.argmax(pred[self.data.test_mask], -1), average='macro')
@@ -213,7 +206,6 @@ class LMTrainer():
         val_micro_f1 = f1_score(self.data.y[self.data.val_mask], np.argmax(pred[self.data.val_mask], -1), average='micro')
         test_micro_f1 = f1_score(self.data.y[self.data.test_mask], np.argmax(pred[self.data.test_mask], -1), average='micro')
 
-        # 打印结果，包括 F1 分数
         print(
             f'[LM] TrainAcc: {train_acc:.4f}, ValAcc: {val_acc:.4f}, TestAcc: {test_acc:.4f}, '
             f'TrainMacroF1: {train_macro_f1:.4f}, ValMacroF1: {val_macro_f1:.4f}, TestMacroF1: {test_macro_f1:.4f}, '
