@@ -34,14 +34,7 @@ class NodeClassification(BaseFlow):
 
         super(NodeClassification, self).__init__(args)
 
-##      父类  BaseFlow中  初始化的  成员
-        # self.args = args
-        # self.logger = self.args.logger
-        # self.model_name = args.model_name
-        # self.model = args.model
-        # self.device = args.device
-        # self.task = build_task(args)
-        # self.max_epoch = args.max_epoch
+
 
 
         self.args.category = self.task.dataset.category
@@ -205,7 +198,6 @@ class NodeClassification(BaseFlow):
         for epoch in epoch_iter:
 
             if self.args.output_widget != None:
-                #   这里直接用main.py中传入的参数output_widget（GUI输出框），把内容输出到GUI中
                 self.args.output_widget.insert(tk.END, f"当前是第{epoch}个epoch  \n")
                 self.args.output_widget.see(tk.END)
                 self.args.output_widget.update_idletasks()
@@ -228,7 +220,6 @@ class NodeClassification(BaseFlow):
                 self.logger.train_info(f"Epoch: {epoch}, Train loss: {train_loss:.4f}, Valid loss: {val_loss:.4f}. "
                                        + self.logger.metric2str(metric_dict))
 
-                #   这里直接用main.py中传入的参数output_widget（GUI输出框），把内容输出到GUI中
                 if self.args.output_widget != None:
                     self.args.output_widget.insert(tk.END, f"第{epoch}个epoch中:" +
                                                 f"Train LOSS : {train_loss:.4f}  ," +
@@ -257,19 +248,6 @@ class NodeClassification(BaseFlow):
             return indices, y_predicts
 
         if self.args.test_flag:
-            if self.args.dataset[:4] == 'HGBn':
-                # save results for HGBn
-                if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
-                    metric_dict, val_loss = self._mini_test_step(modes=['valid'])
-                else:
-                    metric_dict, val_loss = self._full_test_step(modes=['valid'])
-                self.logger.train_info('[Test Info]' + self.logger.metric2str(metric_dict))
-                self.model.eval()
-                with torch.no_grad():
-                    h_dict = self.model.input_feature()
-                    logits = self.model(self.hg, h_dict)[self.category]
-                    self.task.dataset.save_results(logits=logits, file_path=self.args.HGB_results_path)
-                return dict(metric=metric_dict, epoch=epoch)
             if self.args.mini_batch_flag and hasattr(self, 'val_loader'):
                 metric_dict, _ = self._mini_test_step(modes=['valid', 'test'])
             else:
@@ -363,7 +341,6 @@ class NodeClassification(BaseFlow):
             h_dict = {k: e.to(self.device) for k, e in h_dict.items()}
             logits = logits if logits else self.model(self.hg, h_dict)[self.category]
 
-            # 定义 masks
             masks = {}
             for mode in modes:
                 if mode == "train":
@@ -373,32 +350,27 @@ class NodeClassification(BaseFlow):
                 elif mode == "test":
                     masks[mode] = self.test_idx
 
-            # 计算 metric_dict，确保每个模式都是一个字典
             metric_dict = {key: {} for key in masks}  # Initialize each mode with an empty dict
             for key in masks:
                 # Evaluate F1 or other metrics for each mode
                 metric_dict[key] = self.task.evaluate(logits, mode=key)
             
             # Calculate Accuracy
-            y_trues = self.labels[masks['test']].to(self.device)  # 获取真实标签            
-            y_predicts = logits[masks['test']]  # 获取模型预测的logits
-            accuracy = (y_predicts.argmax(dim=1) == y_trues).float().mean()  # 计算准确率
-            metric_dict['test']['accuracy'] = accuracy.item()  # 将准确率添加到 'test' 模式的字典中
+            y_trues = self.labels[masks['test']].to(self.device)         
+            y_predicts = logits[masks['test']]  
+            accuracy = (y_predicts.argmax(dim=1) == y_trues).float().mean()  
+            metric_dict['test']['accuracy'] = accuracy.item()  
 
-            # 将张量从 GPU 转移到 CPU，并转换为 numpy 数组
-            y_trues_cpu = y_trues.cpu().numpy()  # 将真实标签移到 CPU
-            y_predicts_cpu = y_predicts.argmax(dim=1).cpu().numpy()  # 获取预测类别并移到 CPU
-            # 计算 Precision（可以根据需要使用 micro 或 macro 等）
+            y_trues_cpu = y_trues.cpu().numpy()  
+            y_predicts_cpu = y_predicts.argmax(dim=1).cpu().numpy() 
             precision = precision_score(y_trues_cpu, y_predicts_cpu, average='weighted')
             print(f"Precision: {precision}")
-            # 计算 micro-F1 和 macro-F1
             micro_f1 = f1_score(y_trues_cpu, y_predicts_cpu, average='micro')
             macro_f1 = f1_score(y_trues_cpu, y_predicts_cpu, average='macro')
 
             print(f"Micro-F1: {micro_f1}")
             print(f"Macro-F1: {macro_f1}")
 
-            # 计算损失
             loss_dict = {key: self.loss_fn(logits[mask], self.labels[mask]).item() for key, mask in masks.items()}
 
             return metric_dict, loss_dict
