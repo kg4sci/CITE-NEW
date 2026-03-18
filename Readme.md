@@ -14,7 +14,7 @@
 | pt              | [chemistry.pt](https://huggingface.co/datasets/kg4sci/CITE/blob/main/chemistry.pt) and [my_graph_data.pt](https://huggingface.co/datasets/kg4sci/CITE/blob/main/my_graph_data.pt) provides all information of  node and edges.<br /> Download the datasets and move them to `datasets/pt/` |
 | json            | json file include manufactured for GraphGPT, which includs two training stages and one eval stage.<br />Download [stage1](https://huggingface.co/datasets/kg4sci/CITE/blob/main/stage1.json), [stage2](https://huggingface.co/datasets/kg4sci/CITE/blob/main/stage2.json) and [eval](https://huggingface.co/datasets/kg4sci/CITE/blob/main/eval_std.json) and move them to `dataset/json/` |
 
-## 2.Run different models
+## 2.Run models
 
 ### Homogeneous Graph models
 
@@ -56,13 +56,13 @@ python main.py -m model name -t node_classification -d my_custom_node_classifica
 model names:
 RGCN SimpleHGN HGT NARS CompGCN HPN
 
-### LLM
+### LLMs
 
 #### Requirements
 
 ```
-cd models/TAPE+LLaMA
-conda creative --name LLM python==3.10
+cd models/LLMs
+conda create --name LLM python==3.10
 conda activate LLM
 pip install -r requirements.txt
 ```
@@ -136,3 +136,41 @@ chmod +x eval.sh
 ./eval.sh
 ```
 
+#### LLaGA
+
+##### Requirements
+
+```
+cd models/LLaGA
+conda create --name llaga python==3.10
+conda activate llaga
+pip install -r requirements.txt
+pip install flash-attn --no-build-isolation
+pip install torch_geometric
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.1.0+cu118.html
+```
+
+##### Training
+
+```
+CUDA_VISIBLE_DEVICES=0 ./scripts/train.sh vicuna nc chemistry 16 chemistry
+```
+
+##### Evaluation
+
+```
+python eval/eval_pretrain.py \
+  --model_path /path/to/projector \
+  --model_base lmsys/vicuna-7b-v1.5-16k \
+  --conv_mode v1 \
+  --dataset chemistry \
+  --pretrained_embedding_type chemistry \
+  --use_hop 2 \
+  --sample_neighbor_size 10 \
+  --answers_file ./results/chemistry_nc.jsonl \
+  --task nc \
+  --cache_dir ../../checkpoint \
+  --template ND
+
+python eval/eval_res.py --dataset chemistry --task nc --res_path ./results/chemistry_nc.jsonl
+```
