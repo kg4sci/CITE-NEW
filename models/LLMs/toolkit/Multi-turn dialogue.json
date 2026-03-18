@@ -1,0 +1,13 @@
+{
+  "rounds": [
+    {
+      "user": "I would like to determine which SCI category a photocatalysis-related paper belongs to. Here is the basic information of the paper: Title: {title}, Abstract: {abstract}. Based on this information, could you summarize the key research themes and technical focus of this paper?"
+    },
+    {
+      "user": "Here is some additional information about the paper: Journal: {journal}, Authors: {authors}, Keywords: {keywords}. Given this, could you further refine your judgment on which general scientific disciplines this paper most likely falls under? Please suggest 3 to 5 possible fields."
+    },
+    {
+      "user": "Now, please choose the most appropriate SCI categories from the following list of 85 options, and explain your reason: {label_set}"
+    }
+  ]
+}

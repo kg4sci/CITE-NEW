@@ -1,0 +1,4 @@
+{
+  "system": "You are a careful classifier. I would like you to determine which category a paper belongs to. You must follow the user's output format exactly. Do not add any explanation, punctuation, quotes, or extra words.",
+  "user": "Task: Assign exactly ONE label to the paper based on the information below.\nPaper:\nTitle: {title}, Journal: {journal}, Authors: {authors}.\nLabel set (choose exactly one; output must match one label verbatim): {label_set}\nOutput format rules (strict):\n- Output exactly one label from the label set, verbatim.\n- Output nothing else (no reasoning, no extra text, no quotes, no ID numbers unless they are part of the label).\n- The entire response must be a single line containing only the label.\nAnswer:"
+}
